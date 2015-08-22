@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: CustomSky
+  m_Shader: {fileID: 4800000, guid: 3db3946839ed5554baf310391e48f243, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  m_SavedProperties:
+    serializedVersion: 2
+    m_TexEnvs: {}
+    m_Floats:
+      data:
+        first:
+          name: _SunRadiusB
+        second: .023
+      data:
+        first:
+          name: _SunRadiusA
+        second: .00700000022
+      data:
+        first:
+          name: _SunIntensity
+        second: 2
+    m_Colors:
+      data:
+        first:
+          name: _SkyColor
+        second: {r: .180392206, g: .321568608, b: .525490224, a: 1}
+      data:
+        first:
+          name: _HorizonColor
+        second: {r: .78039223, g: .866666675, b: .909803987, a: 1}
