@@ -3,105 +3,116 @@ using System.Collections;
 using System.Collections.Generic;
 using Generator;
 
-public class DynamicTerain : MonoBehaviour {
+public class DynamicTerain : MonoBehaviour
+{
+    // TODO : new array index is used for each tile spawned. I set the size to a random high number so it doesn't run out fast.
+    private TerainGen[] terainList = new TerainGen[1000000];
 
-    // TODO : fix
-	private TerainGen[] terainList = new TerainGen[1000000];
+    [SerializeField]
+    private TerainGen baseTerain;
 
-	[SerializeField]
-	private TerainGen baseTerain;
+    [SerializeField]
+    private Transform target;
 
-	[SerializeField]
-	private Transform target;
+    [SerializeField]
+    private int terainSize = 101;
 
-	[SerializeField]
-	private int terainSize = 101;
+    [SerializeField]
+    private int drawDist = 3;
 
-	[SerializeField]
-	private int drawDist = 3;
+    [SerializeField]
+    private Gradient gizmoColorDistance;
 
-	[SerializeField]
-	private Gradient gizmoColorDistance;
+    [SerializeField]
+    private bool draw = false;
+    [SerializeField]
+    private UnityEngine.UI.Text tileCountText;
+    [SerializeField]
+    private UnityEngine.UI.Text tileMaxText;
+    [SerializeField]
+    private UnityEngine.UI.Slider tileMaxSlide;
 
-	[SerializeField]
-	private bool draw = false;
-	[SerializeField]
-	private UnityEngine.UI.Text tileCountText;
-	[SerializeField]
-	private UnityEngine.UI.Text tileMaxText;
-	[SerializeField]
-	private UnityEngine.UI.Slider tileMaxSlide;
+    private int tileCount = 0;
 
-	private int tileCount = 0;
-
-    public Transform Target{
-        set {
+    public Transform Target
+    {
+        set
+        {
             target = value;
         }
     }
 
-	void OnDrawGizmos(){
-		if (draw) {
-			float xPos = target.position.x;
-			float zPos = target.position.z;
-		
-			int intTerainStartX = Mathf.FloorToInt (xPos / (float)terainSize);
-			int intTerainStartZ = Mathf.FloorToInt (zPos / (float)terainSize);
+    void OnDrawGizmos()
+    {
+        if (draw)
+        {
+            float xPos = target.position.x;
+            float zPos = target.position.z;
 
-			for (int x = -drawDist; x < (drawDist+1); x++) {
-				for (int z = -drawDist; z < (drawDist+1); z++) {
-					float dist = Vector2.Distance (new Vector2 ((x * terainSize), (z * terainSize)), new Vector2 (intTerainStartX, intTerainStartZ));
-					float t = (dist / (float)drawDist) / (float)terainSize;
-					// set color (gradiant distance)
-					Gizmos.color = gizmoColorDistance.Evaluate (t);
-					// draw terain rect
-					DragGizmoRect (new Rect (intTerainStartX + x, intTerainStartZ + z, terainSize, terainSize), 80f - (0.1f * dist));
-				}
-			}
-		}
-	}
+            int intTerainStartX = Mathf.FloorToInt(xPos / (float)terainSize);
+            int intTerainStartZ = Mathf.FloorToInt(zPos / (float)terainSize);
 
-	void DragGizmoRect(Rect rect,float height){
-		Vector3 bottomLeft = 	new Vector3((rect.x*rect.width)					,height,(rect.y*rect.height));
-		Vector3 bottomRight = 	new Vector3(((rect.x*rect.width)+rect.width)		,height,(rect.y*rect.height));
-		Vector3 topRight = 		new Vector3(((rect.x*rect.width)+rect.width)		,height,((rect.y*rect.height)+rect.height));
-		Vector3 topLeft = 		new Vector3((rect.x*rect.width)					,height,((rect.y*rect.height)+rect.height));
+            for (int x = -drawDist; x < (drawDist + 1); x++)
+            {
+                for (int z = -drawDist; z < (drawDist + 1); z++)
+                {
+                    float dist = Vector2.Distance(new Vector2((x * terainSize), (z * terainSize)), new Vector2(intTerainStartX, intTerainStartZ));
+                    float t = (dist / (float)drawDist) / (float)terainSize;
+                    // set color (gradiant distance)
+                    Gizmos.color = gizmoColorDistance.Evaluate(t);
+                    // draw terain rect
+                    DragGizmoRect(new Rect(intTerainStartX + x, intTerainStartZ + z, terainSize, terainSize), 80f - (0.1f * dist));
+                }
+            }
+        }
+    }
 
-		Gizmos.DrawLine(bottomLeft,bottomRight);
-		Gizmos.DrawLine(bottomRight,topRight);
-		Gizmos.DrawLine(topRight,topLeft);
-		Gizmos.DrawLine(topLeft,bottomLeft);
-	}
+    void DragGizmoRect(Rect rect, float height)
+    {
+        Vector3 bottomLeft = new Vector3((rect.x * rect.width), height, (rect.y * rect.height));
+        Vector3 bottomRight = new Vector3(((rect.x * rect.width) + rect.width), height, (rect.y * rect.height));
+        Vector3 topRight = new Vector3(((rect.x * rect.width) + rect.width), height, ((rect.y * rect.height) + rect.height));
+        Vector3 topLeft = new Vector3((rect.x * rect.width), height, ((rect.y * rect.height) + rect.height));
 
-	void Start () {
-		Invoke("UpdateTerain",0.0f);
-	}
+        Gizmos.DrawLine(bottomLeft, bottomRight);
+        Gizmos.DrawLine(bottomRight, topRight);
+        Gizmos.DrawLine(topRight, topLeft);
+        Gizmos.DrawLine(topLeft, bottomLeft);
+    }
 
-	void UpdateTerain () {
+    void Start()
+    {
+        Invoke("UpdateTerain", 0.0f);
+    }
 
-		// update ui
-		tileCountText.text = "TILES: " + tileCount + " VERTS: " + (tileCount*289) + " TRIS: " + (tileCount*578);
-		tileMaxText.text = "MAX TILES: " + tileMaxSlide.value;
+    void UpdateTerain()
+    {
 
-		// remove tiles
-		if (tileCount > tileMaxSlide.value) {
-			StartCoroutine( RemoveParts() );
-		}
+        // update ui
+        tileCountText.text = "TILES: " + tileCount + " VERTS: " + (tileCount * 289) + " TRIS: " + (tileCount * 578);
+        tileMaxText.text = "MAX TILES: " + tileMaxSlide.value;
 
-		// add tiles
-		float xPos = target.position.x;
-		float zPos = target.position.z;
+        // remove tiles
+        if (tileCount > tileMaxSlide.value)
+        {
+            StartCoroutine(RemoveParts());
+        }
 
-		int intTerainStartX = Mathf.FloorToInt(xPos/(float)terainSize);
-		int intTerainStartY = Mathf.FloorToInt(zPos/(float)terainSize);
+        // add tiles
+        float xPos = target.position.x;
+        float zPos = target.position.z;
 
-		int terainStartX = intTerainStartX*terainSize;
-		int terainStartY = intTerainStartY*terainSize;
-		StartCoroutine( UpdateParts(terainStartX,terainStartY) );
-	}
+        int intTerainStartX = Mathf.FloorToInt(xPos / (float)terainSize);
+        int intTerainStartY = Mathf.FloorToInt(zPos / (float)terainSize);
 
-	IEnumerator RemoveParts(){
-		int remove = 20;
+        int terainStartX = intTerainStartX * terainSize;
+        int terainStartY = intTerainStartY * terainSize;
+        StartCoroutine(UpdateParts(terainStartX, terainStartY));
+    }
+
+    IEnumerator RemoveParts()
+    {
+        int remove = 20;
         // fill distance arrays
         int[] indexFarest = new int[remove];
         float[] faretsDist = new float[remove];
@@ -121,7 +132,7 @@ public class DynamicTerain : MonoBehaviour {
                 if (dist > faretsDist[j])
                 {
                     //Debug.Log("j:"+j);
-                    for (int k = 5; k > (0+j); k--)
+                    for (int k = 5; k > (0 + j); k--)
                     {
                         //Debug.Log("k:" + k);
                         indexFarest[k] = indexFarest[k - 1];
@@ -136,41 +147,44 @@ public class DynamicTerain : MonoBehaviour {
 
         //sort array indexes
         System.Array.Sort(indexFarest);
-        
+
         // remove tiles from array
-        for (int j = remove-1; j > -1; j--)
+        for (int j = remove - 1; j > -1; j--)
         {
-			// remove
+            // remove
             if (terainList[indexFarest[j]] != null)
             {
                 GameObject.Destroy(terainList[indexFarest[j]].gameObject);
                 terainList[indexFarest[j]] = null;
-			    // move rest parts down 
+                // move rest parts down 
                 for (int i = indexFarest[j]; i < tileCount; i++)
                 {
-				    terainList [i] = terainList [i+1];
-			    }
-			    tileCount --;
-			}
-		}
+                    terainList[i] = terainList[i + 1];
+                }
+                tileCount--;
+            }
+        }
         yield return null;
-	}
+    }
 
 
-	IEnumerator UpdateParts(int terainStartX,int terainStartY){
+    IEnumerator UpdateParts(int terainStartX, int terainStartY)
+    {
 
-		//List<NewPart> newParts = new List<NewPart>();
-        NewPart[] newPartsAr = new NewPart[( (drawDist + drawDist + 1) * (drawDist + drawDist + 1) )];
+        //List<NewPart> newParts = new List<NewPart>();
+        NewPart[] newPartsAr = new NewPart[((drawDist + drawDist + 1) * (drawDist + drawDist + 1))];
         int num = 0;
-		// colect posible new tile positions
-		Vector3 targetPos = target.position;
-		for (int x = -drawDist; x < (drawDist+1); x++) {
-			for (int z = -drawDist; z < (drawDist+1); z++) {
-				float dist = Vector2.Distance(new Vector2(terainStartX+((x*terainSize)-(terainSize*0.5f)),terainStartY+((z*terainSize)-(terainSize*0.5f))),new Vector2(targetPos.x,targetPos.z));
+        // colect posible new tile positions
+        Vector3 targetPos = target.position;
+        for (int x = -drawDist; x < (drawDist + 1); x++)
+        {
+            for (int z = -drawDist; z < (drawDist + 1); z++)
+            {
+                float dist = Vector2.Distance(new Vector2(terainStartX + ((x * terainSize) - (terainSize * 0.5f)), terainStartY + ((z * terainSize) - (terainSize * 0.5f))), new Vector2(targetPos.x, targetPos.z));
                 newPartsAr[num] = new NewPart(terainStartX + (x * (terainSize)), terainStartY + (z * (terainSize)), dist);
                 num++;
-			}
-		}
+            }
+        }
 
         // start threaded sort job to sort possible new tiles by distance
         SortTerainGenByDistJob sortJob = new SortTerainGenByDistJob(newPartsAr);
@@ -182,51 +196,57 @@ public class DynamicTerain : MonoBehaviour {
             yield return null;
         }
 
-		int currentPartsGenerated = 0;
+        int currentPartsGenerated = 0;
 
-		// generate max 2 new parts
+        // generate max 2 new parts
         for (int i = 0; i < newPartsAr.Length; i++)
         {
-			// generate parts
+            // generate parts
             if (GenPart(newPartsAr[i].xPart, newPartsAr[i].yPart))
             {
-				currentPartsGenerated++;
-			};
+                currentPartsGenerated++;
+            };
 
-			if(currentPartsGenerated > 2){
-				break;
-			}
-		}
-		yield return null;
-		UpdateTerain ();
-	}
+            if (currentPartsGenerated > 2)
+            {
+                break;
+            }
+        }
+        yield return null;
+        UpdateTerain();
+    }
 
 
-	bool GenPart(int newPartX, int newPartY){
-		bool alreadyExists = false;
-		for (int i = 0; i < tileCount; i++) {
-			if(terainList[i].startX == newPartX && terainList[i].startY == newPartY){
-				alreadyExists = true;
-				return false;
-			}
-		}
-		if(!alreadyExists){
-			TerainGen newTerain = ((GameObject)GameObject.Instantiate(baseTerain.gameObject,Vector3.zero,Quaternion.identity)).GetComponent<TerainGen>();
-			
-			newTerain.SetStartX = newPartX;
-			newTerain.SetStartY = newPartY;
-			newTerain.Generate();
-			terainList[tileCount] = newTerain;
-			newTerain.transform.parent = transform;
+    bool GenPart(int newPartX, int newPartY)
+    {
+        bool alreadyExists = false;
+        for (int i = 0; i < tileCount; i++)
+        {
+            if (terainList[i].startX == newPartX && terainList[i].startY == newPartY)
+            {
+                alreadyExists = true;
+                return false;
+            }
+        }
+        if (!alreadyExists)
+        {
+            TerainGen newTerain = ((GameObject)GameObject.Instantiate(baseTerain.gameObject, Vector3.zero, Quaternion.identity)).GetComponent<TerainGen>();
 
-			tileCount++;
+            newTerain.SetStartX = newPartX;
+            newTerain.SetStartY = newPartY;
+            newTerain.Generate();
+            terainList[tileCount] = newTerain;
+            newTerain.transform.parent = transform;
 
-			return true;
-		}
-		return false;
-	}
+            tileCount++;
 
-	Vector2 TileWorldPos(TerainGen tile){
-		return new Vector2 (tile.startX, tile.startY);
-	}
+            return true;
+        }
+        return false;
+    }
+
+    Vector2 TileWorldPos(TerainGen tile)
+    {
+        return new Vector2(tile.startX, tile.startY);
+    }
 }

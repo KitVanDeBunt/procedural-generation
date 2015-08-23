@@ -11,9 +11,6 @@ namespace Generator
 
         #region Fields
 
-        // start position in noise function
-        //[SerializeField]
-
         // get/set to slow for this fields
         public int startX;
         public int startY;
@@ -92,22 +89,6 @@ namespace Generator
                 mapX = value;
             }
         }
-        /*
-        public int StartY
-        {
-            get
-            {
-                return startY;
-            }
-        }
-
-        public int StartX
-        {
-            get
-            {
-                return startX;
-            }
-        }*/
 
         public int SetStartY
         {
@@ -160,7 +141,6 @@ namespace Generator
 
         public override void Generate()
         {
-
             generating = true;
             meshGenerate = false;
 
@@ -308,8 +288,6 @@ namespace Generator
 
             return mesh;
         }
-
-
 
     }
 }
