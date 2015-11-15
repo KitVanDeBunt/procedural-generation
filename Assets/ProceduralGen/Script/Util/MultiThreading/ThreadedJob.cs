@@ -29,7 +29,6 @@ public abstract class ThreadedJob
     {
         m_Thread = new System.Threading.Thread(JobFunction);
         m_Thread.Start();
-        //GetHeights();
     }
 
 
